@@ -15,19 +15,30 @@ import { rpcApi, subgraphApi } from "../redux/store";
 
 interface GameContextValue {
   king?: string;
-  army?: BigNumber;
-  decay?: BigNumber;
-  step?: BigNumber;
   armyFlowRate?: BigNumber;
   treasureSnapshot: AccountTokenSnapshot | null | undefined;
 }
 const GameContext = createContext<GameContextValue>(null!);
 
 const GameContextProvider: FC<PropsWithChildren> = ({ children }) => {
+
+  /*
+    The game contract is:
+    - Receiving all the streams. Use Subgraph to calculate the sum
+    - Call it "totalIncome"
+
+    Hill is the contract
+    - Hill is receiving all the streams
+
+    While CashToken is the token we're using 
+
+  
+    Looks like armyFlowRate can be used as a basis to poll the contract for the current gamble size
+
+  */
+
+
   const kingRequest = rpcApi.useGetActiveKingQuery();
-  const armyRequest = rpcApi.useGetArmySizeQuery();
-  const decayRequest = rpcApi.useGetDecayQuery();
-  const stepRequest = rpcApi.useGetStepQuery();
   const [armyFlowRateTrigger, armyFlowRateRequest] =
     rpcApi.useLazyGetArmyFlowRateQuery();
 
@@ -47,9 +58,6 @@ const GameContextProvider: FC<PropsWithChildren> = ({ children }) => {
   const contextValue = useMemo(() => {
     return {
       king: kingRequest.data,
-      army: armyRequest.data ? BigNumber.from(armyRequest.data) : undefined,
-      decay: decayRequest.data ? BigNumber.from(decayRequest.data) : undefined,
-      step: stepRequest.data ? BigNumber.from(stepRequest.data) : undefined,
       armyFlowRate: armyFlowRateRequest.data
         ? BigNumber.from(armyFlowRateRequest.data)
         : undefined,
@@ -57,9 +65,6 @@ const GameContextProvider: FC<PropsWithChildren> = ({ children }) => {
     };
   }, [
     kingRequest.data,
-    armyRequest.data,
-    decayRequest.data,
-    stepRequest.data,
     armyFlowRateRequest.data,
     hillTreasureSnapshotQuery.data,
   ]);

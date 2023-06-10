@@ -1,7 +1,7 @@
 import { memo, ReactElement } from "react";
 import useSignificantFlowingDecimal from "../hooks/useEtherSignificantFlowingDecimal";
 import useFlowingBalance from "../hooks/useFlowingBalance";
-import Amount from "./Amount";
+import Amount from "./prod/Amount";
 
 export interface FlowingBalanceProps {
   balance: string;

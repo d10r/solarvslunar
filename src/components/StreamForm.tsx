@@ -4,7 +4,7 @@ import { ChangeEvent, FC, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useGameContext } from "../context/GameContext";
 import { UnitOfTime } from "../utils/UnitOfTime";
-import Amount from "./Amount";
+import Amount from "./prod/Amount";
 import Paper from "./Paper";
 import PrimaryButton from "./PrimaryButton";
 import { Paragraph2, SmallLabel } from "./Typography";

@@ -11,7 +11,7 @@ import {
 } from "../hooks/useAccountTransactions";
 import { rpcApi, subgraphApi } from "../redux/store";
 import AddressName from "./AddressName";
-import Amount from "./Amount";
+import Amount from "./prod/Amount";
 import Flex from "./Flexbox";
 import FlowingBalance from "./FlowingBalance";
 import Paper from "./Paper";

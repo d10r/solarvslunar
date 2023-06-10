@@ -4,7 +4,7 @@ import styled from "styled-components";
 import network from "../configuration/network";
 import { subgraphApi } from "../redux/store";
 import { UnitOfTime } from "../utils/UnitOfTime";
-import Amount from "./Amount";
+import Amount from "./prod/Amount";
 import Paper from "./Paper";
 import { H4, H6, H7 } from "./Typography";
 

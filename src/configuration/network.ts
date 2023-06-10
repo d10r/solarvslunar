@@ -14,6 +14,11 @@ const network = {
   cashToken: "0xb891d8559feb358f4651745aaaBFe97067b3bF81",
   armyToken: "0x6C357412329f9a3EE07017Be93ed0aC551faa77b",
   hillAddress: "0x75ef7C347652f3a4232a0C6f6b9b26492E2E0A94",
+  
+  // new data to be used: 
+  token: "",
+  contractAddress: "",
+
 } as const;
 
 export default Object.freeze(network);

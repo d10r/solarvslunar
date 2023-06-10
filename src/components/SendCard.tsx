@@ -7,7 +7,7 @@ import {
   useAccountTransactionsSelector,
 } from "../hooks/useAccountTransactions";
 import { rpcApi } from "../redux/store";
-import Amount from "./Amount";
+import Amount from "./prod/Amount";
 import Paper from "./Paper";
 import StreamForm from "./StreamForm";
 import { H6, Paragraph, SmallLabel } from "./Typography";
