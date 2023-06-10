@@ -41,7 +41,7 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     /// @notice Token coming in and token going out
     ISuperToken public immutable acceptedToken;
     /// @notice the current gambler of the hill
-    address public gambler;
+    address public lastGambler;
     uint256 public lastGambleAmount;
     uint256 public lastGambleTimestamp;
     uint256 public prevGambleDuration;
@@ -59,7 +59,7 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     ) {
         host = _host;
         acceptedToken = _token; 
-        gambler = msg.sender;
+        lastGambler = msg.sender;
         lastGambleAmount = 0;
         lastGambleTimestamp = block.timestamp;
         gameStart = block.timestamp;
@@ -71,6 +71,11 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     // stepwise hyperbolic decay which gets stretched further over time the longer the previous gamble took,
     // resulting in an increasing incentive to wage a new gamble
     function getMinGambleAmount() public view returns(uint256) {
+        return _getMinGambleAmount(block.timestamp, lastGambleAmount, lastGambleTimestamp, prevGambleDuration);
+    }
+
+    // have a pure version in order to make testing easier
+    function _getMinGambleAmount(uint256 blockTimestamp, uint256 lastGambleAmount, uint256 lastGambleTimestamp, uint256 prevGambleDuration) public pure returns(uint256) {
         //uint256 halvingPeriod = prevGambleDuration / 16;
         //uint256 nrHalvings = halvingPeriod == 0 ? 0 :(block.timestamp - lastGambleTimestamp) / halvingPeriod;
         // equivalent to lastGambleAmount / 2^nrHalvings
@@ -90,7 +95,7 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
         uint256 nrHalvings = 0;
 
         // create a log scale for the halving speed
-        uint256 timePassed = block.timestamp - lastGambleTimestamp;
+        uint256 timePassed = blockTimestamp - lastGambleTimestamp;
         // this loop is in theory unbounded, but worst case 32 iterations cover >100 years, we're good with that
         while (timePassed >= halvingPeriod) {
             timePassed -= halvingPeriod;
@@ -157,23 +162,23 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     // RECEIVER DATA
     /// @notice Returns current gambler's address, start time, and flow rate.
     /// @return startTime Start time of the current flow.
-    /// @return curGambler Receiving address.
+    /// @return gambler Receiving address.
     /// @return flowRate Flow rate from this contract to the gambler.
     function currentGambler()
         external
         view
         returns (
             uint256 startTime,
-            address curGambler,
+            address gambler,
             int96 flowRate
         )
     {
-        if (gambler != address(0)) {
+        if (lastGambler != address(0)) {
             (startTime, flowRate, , ) = acceptedToken.getFlowInfo(
                 address(this),
-                gambler
+                lastGambler
             );
-            curGambler = gambler;
+            gambler = lastGambler;
         }
     }
 
@@ -252,14 +257,14 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     function _changeGambler(address newGambler) internal {
         if (newGambler == address(0)) revert InvalidGambler();
         if (host.isApp(ISuperApp(newGambler))) revert GamblerIsSuperApp();
-        if (newGambler == gambler) return;
-        int96 outFlowRate = acceptedToken.getFlowRate(address(this), gambler);
+        if (newGambler == lastGambler) return;
+        int96 outFlowRate = acceptedToken.getFlowRate(address(this), lastGambler);
         if (outFlowRate > 0) {
-            acceptedToken.deleteFlow(address(this), gambler);
+            acceptedToken.deleteFlow(address(this), lastGambler);
             acceptedToken.createFlow(newGambler, outFlowRate);
         }
-        gambler = newGambler;
-        emit HailNewGambler(gambler, lastGambleAmount);
+        lastGambler = newGambler;
+        emit HailNewGambler(newGambler, lastGambleAmount);
     }
     /// @dev Updates the outflow. The flow is either created, updated, or deleted, depending on the
     /// net flow rate.
@@ -268,17 +273,17 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     function _updateOutflow(bytes memory ctx) private returns (bytes memory newCtx) {
         newCtx = ctx;
         int96 netFlowRate = acceptedToken.getNetFlowRate(address(this));
-        int96 outFlowRate = acceptedToken.getFlowRate(address(this), gambler);
+        int96 outFlowRate = acceptedToken.getFlowRate(address(this), lastGambler);
         int96 inFlowRate = netFlowRate + outFlowRate;
         if (inFlowRate == 0) {
             // The flow does exist and should be deleted.
-            newCtx = acceptedToken.deleteFlowWithCtx(address(this), gambler, ctx);
+            newCtx = acceptedToken.deleteFlowWithCtx(address(this), lastGambler, ctx);
         } else if (outFlowRate != 0) {
             // The flow does exist and needs to be updated.
-            newCtx = acceptedToken.updateFlowWithCtx(gambler, inFlowRate, ctx);
+            newCtx = acceptedToken.updateFlowWithCtx(lastGambler, inFlowRate, ctx);
         } else {
             // The flow does not exist but should be created.
-            newCtx = acceptedToken.createFlowWithCtx(gambler, inFlowRate, ctx);
+            newCtx = acceptedToken.createFlowWithCtx(lastGambler, inFlowRate, ctx);
         }
     }
 }
