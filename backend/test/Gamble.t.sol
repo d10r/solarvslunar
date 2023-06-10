@@ -75,6 +75,7 @@ contract GambleTest is Test {
         assertEq(game.lastGambler(), expectedGambler, "unexpected gambler");
         int96 gamblerNetFr = superToken.getNetFlowRate(game.lastGambler());
         assertEq(int256(gamblerNetFr), int256(expectedFr), "unexpected flowrate");
+        console.log("minGambleAmount (TODO: test): %s", game.getMinGambleAmount());
     }
 
     // TESTS
@@ -119,7 +120,6 @@ contract GambleTest is Test {
 
         assertEq(uint256(int256(superToken.getNetFlowRate(address(bob)))), 1e9, "bob unexpected fr");
         skip(60); // fast forward 60 seconds
-        console.log("block.timestamp: %s", game.getBlockTimestamp());
         //console.log("lastAmount: %s, lastTimestamp: %s, prevDuration: %s", game.lastGambleAmount(), game.lastGambleTimestamp(), game.prevGambleDuration());
         console.log("minGambleAmount 2: %s", game.getMinGambleAmount());
         gamble(carol, 15e12);
@@ -136,6 +136,97 @@ contract GambleTest is Test {
 
     function testComplexSetup() public {
         stream(alice, 1e9);
+        assertInvariants(deployer, 1e9);
+
+        skip(600); // fast forward 10 mins
         
+        gamble(carol, 15e12);
+        assertInvariants(carol, 1e9);
+
+        skip(600); // fast forward 10 mins
+
+        stream(bob, 2e9);
+        assertInvariants(carol, 3e9);
+
+        skip(3600); // fast forward 1h
+
+        gamble(dan, 15e13);
+        assertInvariants(dan, 3e9);
+
+        skip(600); // fast forward 10 mins
+
+        gamble(carol, 15e14);
+        assertInvariants(carol, 3e9);
+    }
+
+    // _getMinGambleAmount(uint256 blockTimestamp, uint256 lastGambleTimestamp, uint256 lastGambleAmount, uint256 prevGambleDuration) public pure returns(uint256) {
+    function testMinGambleAmount() public {
+        uint prevDuration = 0;
+        uint amount = 0;
+
+        prevDuration = 10;
+        console.log("prevDuration: %s, amount: &s", prevDuration, amount);
+        console.log("after 0  s: %s", game._getMinGambleAmount(1000000, 1000000, 10, prevDuration));
+        console.log("after 10 s: %s", game._getMinGambleAmount(1000010, 1000000, 10, prevDuration));
+        console.log("after 10 m: %s", game._getMinGambleAmount(1000600, 1000000, 10, prevDuration));
+        console.log("after 10 h: %s", game._getMinGambleAmount(1036000, 1000000, 10, prevDuration));
+
+        prevDuration = 10000;
+        console.log("prevDuration: %s, amount: &s", prevDuration, amount);
+        console.log("after 0  s: %s", game._getMinGambleAmount(1000000, 1000000, 10, prevDuration));
+        console.log("after 10 s: %s", game._getMinGambleAmount(1000010, 1000000, 10, prevDuration));
+        console.log("after 10 m: %s", game._getMinGambleAmount(1000600, 1000000, 10, prevDuration));
+        console.log("after 10 h: %s", game._getMinGambleAmount(1036000, 1000000, 10, prevDuration));
+
+        prevDuration = 10000;
+        amount = 1e9;
+        console.log("prevDuration: %s, amount: &s", prevDuration, amount);
+        console.log("after 0  s: %s", game._getMinGambleAmount(1000000, 1000000, amount, prevDuration));
+        console.log("after 10 s: %s", game._getMinGambleAmount(1000010, 1000000, amount, prevDuration));
+        console.log("after 10 m: %s", game._getMinGambleAmount(1000600, 1000000, amount, prevDuration));
+        console.log("after 10 h: %s", game._getMinGambleAmount(1036000, 1000000, amount, prevDuration));
+
+        prevDuration = 10000001;
+        console.log("prevDuration: %s, amount: %s", prevDuration, amount);
+        console.log("after 0  s: %s", game._getMinGambleAmount(1000000, 1000000, amount, prevDuration));
+        console.log("after 10 s: %s", game._getMinGambleAmount(1000010, 1000000, amount, prevDuration));
+        console.log("after 10 m: %s", game._getMinGambleAmount(1000600, 1000000, amount, prevDuration));
+        console.log("after 10 h: %s", game._getMinGambleAmount(1036000, 1000000, amount, prevDuration));
+
+        amount = 1000;
+        prevDuration = 60;
+        console.log("prevDuration: %s, amount: %s", prevDuration, amount);
+        console.log("after 0  s: %s", game._getMinGambleAmount(1000000, 1000000, amount, prevDuration));
+        console.log("after 10 s: %s", game._getMinGambleAmount(1000010, 1000000, amount, prevDuration));
+        console.log("after 1 m: %s", game._getMinGambleAmount(1000060, 1000000, amount, prevDuration));
+        console.log("after 1 h: %s", game._getMinGambleAmount(1003600, 1000000, amount, prevDuration));
+        console.log("after 1 d: %s", game._getMinGambleAmount(1086400, 1000000, amount, prevDuration));
+
+        amount = 1000;
+        prevDuration = 3600;
+        console.log("prevDuration: %s, amount: %s", prevDuration, amount);
+        console.log("after 0  s: %s", game._getMinGambleAmount(1000000, 1000000, amount, prevDuration));
+        console.log("after 10 s: %s", game._getMinGambleAmount(1000010, 1000000, amount, prevDuration));
+        console.log("after 1 m: %s", game._getMinGambleAmount(1000060, 1000000, amount, prevDuration));
+        console.log("after 1 h: %s", game._getMinGambleAmount(1003600, 1000000, amount, prevDuration));
+        console.log("after 1 d: %s", game._getMinGambleAmount(1086400, 1000000, amount, prevDuration));
+
+        amount = 1000;
+        prevDuration = 86400;
+        console.log("prevDuration: %s, amount: %s", prevDuration, amount);
+        console.log("after 0  s: %s", game._getMinGambleAmount(1000000, 1000000, amount, prevDuration));
+        console.log("after 10 s: %s", game._getMinGambleAmount(1000010, 1000000, amount, prevDuration));
+        console.log("after 1 m: %s", game._getMinGambleAmount(1000060, 1000000, amount, prevDuration));
+        console.log("after 1 h: %s", game._getMinGambleAmount(1003600, 1000000, amount, prevDuration));
+        console.log("after 1 d: %s", game._getMinGambleAmount(1086400, 1000000, amount, prevDuration));
+
+        amount = 1000;
+        prevDuration = 2592000;
+        console.log("prevDuration: %s, amount: %s", prevDuration, amount);
+        console.log("after 0  s: %s", game._getMinGambleAmount(1000000, 1000000, amount, prevDuration));
+        console.log("after 10 s: %s", game._getMinGambleAmount(1000010, 1000000, amount, prevDuration));
+        console.log("after 1 m: %s", game._getMinGambleAmount(1000060, 1000000, amount, prevDuration));
+        console.log("after 1 h: %s", game._getMinGambleAmount(1003600, 1000000, amount, prevDuration));
+        console.log("after 1 d: %s", game._getMinGambleAmount(1086400, 1000000, amount, prevDuration));
     }
 }
