@@ -1,0 +1,15 @@
+@font-face {
+  font-family: 'Iceland';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''), url('../f/Iceland-400.woff2') format('woff2'); /* Super Modern Browsers */
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Iceberg';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''), url('../f/Iceberg-400.woff2') format('woff2'); /* Super Modern Browsers */
+  font-display: swap;
+}

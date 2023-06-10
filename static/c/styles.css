@@ -1,0 +1,468 @@
+html, body, div, span, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+abbr, address, cite, code,
+del, dfn, em, img, ins, kbd, q, samp,
+small, strong, sub, sup, var,
+b, i,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section, summary,
+time, mark, audio, video {
+    margin:0;
+    padding:0;
+    border:0;
+    outline:0;
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
+}
+
+body {
+    line-height:1;
+}
+
+article,aside,details,figcaption,figure,
+footer,header,hgroup,menu,nav,section {
+    display:block;
+}
+
+nav ul {
+    list-style:none;
+}
+
+blockquote, q {
+    quotes:none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content:'';
+    content:none;
+}
+
+a {
+    margin:0;
+    padding:0;
+    font-size:100%;
+    vertical-align:baseline;
+    background:transparent;
+}
+
+/* Change colours to your needs */
+ins {
+    background-color:#bababa;
+    color:#000;
+    text-decoration:none;
+}
+
+/* Change colours to your needs */
+mark {
+    background-color:#bababa;
+    color:#000;
+    font-style:italic;
+    font-weight:bold;
+}
+
+del {
+    text-decoration: line-through;
+}
+
+abbr[title], dfn[title] {
+    border-bottom:1px dotted;
+    cursor:help;
+}
+
+table {
+    border-collapse:collapse;
+    border-spacing:0;
+}
+
+/* Change border-color to your needs */
+hr {
+    display:block;
+    height:1px;
+    border:0;
+    border-top:1px solid #cccccc;
+    margin:1em 0;
+    padding:0;
+}
+
+input, select {
+    vertical-align:middle;
+}
+
+#clear,
+#clearer,
+.clear,
+.clearer {
+    clear:both;
+}
+
+.hide,
+.invisible {
+    display:none;
+}
+
+
+.hidden {
+    visibility:hidden;
+}
+
+.visible {
+    visibility:visible;
+}
+
+.mobileOnly {
+  display: none;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Cabin';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(u-4i0qWljRw-PfU81xCKCpdpbgZJl6Xvp9nsBXw.woff2) format('woff2');
+  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Cabin';
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(u-4i0qWljRw-PfU81xCKCpdpbgZJl6Xvqdns.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Cabin';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(u-4i0qWljRw-PfU81xCKCpdpbgZJl6Xvp9nsBXw.woff2) format('woff2');
+  unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Cabin';
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url(u-4i0qWljRw-PfU81xCKCpdpbgZJl6Xvqdns.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+
+
+
+html,
+body {
+  height: auto;
+  min-height: 100%;
+}
+
+body {
+  position: relative;
+  margin: 0px;
+  padding: 0px;
+
+  background-color: #000000;
+
+  font-family: 'Cabin', sans-serif;
+
+  font-size: 18px;
+  font-weight: 400;
+  color: #000000;
+  line-height: 21px;
+}
+
+a {
+  color: #FFFFFF;
+  text-decoration: underline;
+  transition: color .5s ease-in-out;
+}
+
+a:hover {
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+
+p {
+  margin-bottom: 20px;
+}
+
+strong {
+  font-weight: 700;
+}
+
+h1, h2, h3, h4, p, ul, li, ol, a {
+  font-weight: 400;
+}
+
+.clear {
+  clear: both;
+}
+
+.hidden {
+  display: none;
+}
+
+
+.wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+.bgImage {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  background-repeat: no-repeat;
+  background-size: cover;
+  z-index: 1;
+}
+
+.bgImage .gradientTop,
+.bgImage .gradientBottom {
+  width: 100vw;
+  display: block;
+  position: fixed;
+  left: 0px;
+}
+
+.bgImage .gradientTop {
+  height: 25vh;
+  top: 0px;
+}
+
+body.evil .bgImage .gradientTop {
+  background-image: linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0));
+}
+
+body.good .bgImage .gradientTop {
+  background-image: linear-gradient(to bottom, #013a40, rgba(0,0,0,0));
+}
+
+
+.bgImage .gradientBottom {
+  height: 40vh;
+  bottom: 0px;
+}
+
+body.evil .bgImage .gradientBottom {
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,1));
+}
+
+body.good .bgImage .gradientBottom {
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0), #3e642f);
+}
+
+
+body.evil .bgImage {
+  background-image: url(../i/bg-evil.jpg);
+}
+
+body.good .bgImage {
+  background-image: url(../i/bg-good.jpg);
+}
+
+.logo {
+  position: absolute;
+  top: 40px;
+  right: 20px;
+  color: #FFFFFF;
+  text-align: right;
+  text-shadow: 0px 0px 5px rgba(0,0,0,0.25);
+}
+
+.logo .line1 {
+  font-size: 50px;
+  text-transform: uppercase;
+  letter-spacing: 10px;
+  font-weight: 400;
+}
+
+.logo .line2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 16px;
+  font-weight: 700;
+  padding-top: 15px;
+}
+
+.logo .line2 span {
+  font-weight: 400;
+  font-size: 8px;
+  letter-spacing: 9px;
+}
+
+.switchSide {
+  width: 180px;
+  height: 80px;
+  position: absolute;
+  right: 0px;
+  bottom: 50px;
+  background-image: url(../i/switchSides.svg);
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: auto 100%;
+  background-color: #FFFFFF;
+  border-radius: 10px 0px 0px 10px;
+}
+
+.switchSide:hover {
+  cursor: pointer;
+}
+
+body.good .switchSide {
+  background-image: url(../i/switchSides.svg);
+}
+
+body.evil .switchSide {
+  background-image: url(../i/switchSides-good.svg);
+}
+
+
+.switchSide .good,
+.switchSide .evil {
+  position: absolute;
+  left: 85px;
+  top: 15px;
+}
+
+.switchSide strong {
+  font-size: 22px;
+}
+
+
+.interactionBox {
+  width: 450px;
+  height: 300px;
+  padding: 25px;
+  display: block;
+  position: absolute;
+  top: calc(50vh - 175px);
+  left: calc(50vw - 250px);
+
+  background: #FFFFFF;
+  box-shadow: 0px 0px 35px rgba(0,0,0,0.25);
+
+  color: #000000;
+  text-align: center;
+
+  transition: border-radius 1s ease-in-out, box-shadow 1s ease-in-out;
+}
+
+body.evil .interactionBox {
+  box-shadow: 0px 0px 35px rgba(0,0,0,0.25);
+  border-radius: 5px;
+}
+
+body.good .interactionBox {
+  box-shadow: 0px 0px 50px rgba(255,220,45,0.5);
+  border-radius: 25px;
+}
+
+.credentials {
+  position: absolute;
+  bottom: 50px;
+  left: 20px;
+  color: #FFFFFF;
+}
+
+.credentials .title {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.credentials .ethPrague {
+  width: 140px;
+  height: 90px;
+  display: inline-block;
+  background: url(../i/ethprague.png) no-repeat left top;
+  background-size: auto 100%;
+  border-right: 1px solid #FFFFFF;
+  padding-right: 30px;
+  margin-right: 30px;
+}
+
+.credentials .with {
+  display: inline-block;
+  height: 90px;
+}
+
+
+.credentials .superfluid {
+  width: 180px;
+  height: 40px;
+  display: block;
+  background: url(../i/superfluid-logo-light.svg) no-repeat left top;
+  background-size: auto 100%;
+}
+
+.credentials .fraction {
+  width: 180px;
+  height: 40px;
+  margin-top: 10px;
+  display: block;
+}
+
+.credentials .fraction .fIcon {
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+  background: url(../i/fraction-token-logo-v1.svg) no-repeat left top;
+  background-size: 40px auto;
+}
+.credentials .fraction .fText {
+  width: 120px;
+  height: 40px;
+  display: inline-block;
+  background: url(../i/fraction-token-logo-text.svg) no-repeat left center;
+  background-size: 120px auto;
+  position: relative;
+  top: 2px;
+  left: 5px;
+}
+
+
+.connect {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: #FFFFFF;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px rgba(0,0,0,0.25);
+  text-align: center;
+  line-height: 30px;
+  height: 30px;
+  width: 150px;
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.connect:hover {
+  cursor: pointer;
+}
