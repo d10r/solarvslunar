@@ -49,14 +49,17 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     }
 
     // Returns everything needed to understand the current game state
-    function getGameState() public view returns(
-        uint256 _gameStartTimestamp,
-        address _lastGambler,
-        uint256 _lastGambleTimestamp,
-        uint256 _currentMinGambleAmount,
-        int96 _currentFlowrate,
-        uint128 _currentUnitsPer1MNewFlowrate
-    ) {
+    function getGameState()
+        public view
+        returns(
+            uint256 _gameStartTimestamp,
+            address _lastGambler,
+            uint256 _lastGambleTimestamp,
+            uint256 _currentMinGambleAmount,
+            int96 _currentFlowrate,
+            uint128 _currentUnitsPer1MNewFlowrate
+        )
+    {
         return (
             gameStartTimestamp,
             lastGambler,
