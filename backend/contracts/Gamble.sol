@@ -1,46 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
-import {ISuperfluid, ISuperToken, ISuperApp, ISuperAgreement, SuperAppDefinitions} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
+import {
+    ISuperfluid,
+    ISuperToken
+} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperfluid.sol";
 import { SuperTokenV1Library } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
-import {IConstantFlowAgreementV1} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import {SuperAppBaseCFA} from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBaseCFA.sol";
+import { SuperAppBaseCFA } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBaseCFA.sol";
 
+import "forge-std/Test.sol";
 
-/**
-* Solarpunk vs Lunarpunk
-*
-* The optimistic Solarpunk looks at the system and convinces himself they can make a positive-sum game out of it.
-* The life-experienced Lunarpunk looks at the system and convinces himself there's be naive gamblers.
-*/
 contract Gamble is IERC777Recipient, SuperAppBaseCFA {
-    // ---------------------------------------------------------------------------------------------
-    // EVENTS
-    event NewGamble(address gambler, uint256 amount);
-    /// @notice Importing the SuperToken Library to make worgambler with streams easy.
-    using SuperTokenV1Library for ISuperToken;
-    /// @dev Thrown when the gambler is the zero adress.
-    error InvalidGambler();
-    /// @dev Thrown when gambler is also a super app.
-    error GamblerIsSuperApp();
 
-    // CONSTANTS
+    using SuperTokenV1Library for ISuperToken;
+
+    event NewGamble(address gambler, uint256 amount);
+    event NewStream(address streamer, int96 flowrate, uint128 idaUnits);
+
+    // CONSTANTS & IMMUTABLES
     uint32 public constant INITIAL_MIN_AMOUNT_MULTIPLIER = 10;
     uint32 public constant INDEX_ID = 23;
-
-    // ---------------------------------------------------------------------------------------------
-    // STORAGE & IMMUTABLES
-    /// @notice Constant used for ERC777.
     IERC1820Registry constant internal _ERC1820_REG = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-    /// @notice Token coming in and token going out
     ISuperToken public immutable acceptedToken;
-    /// @notice the current gambler of the hill
+
+    // STORAGE
     address public lastGambler;
     uint256 public lastGambleAmount;
     uint256 public lastGambleTimestamp;
     uint256 public prevGambleDuration;
-    uint256 public gameStart;
+    uint256 public gameStartTimestamp;
 
     constructor(
         ISuperfluid _host,
@@ -53,11 +42,30 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     ) {
         host = _host;
         acceptedToken = _token; 
+        gameStartTimestamp = block.timestamp;
         lastGambler = msg.sender;
         lastGambleTimestamp = block.timestamp;
-        gameStart = block.timestamp;
         _ERC1820_REG.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
         acceptedToken.createIndex(INDEX_ID);
+    }
+
+    // Returns everything needed to understand the current game state
+    function getGameState() public view returns(
+        uint256 _gameStartTimestamp,
+        address _lastGambler,
+        uint256 _lastGambleTimestamp,
+        uint256 _currentMinGambleAmount,
+        int96 _currentFlowrate,
+        uint128 _currentUnitsPer1MNewFlowrate
+    ) {
+        return (
+            gameStartTimestamp,
+            lastGambler,
+            lastGambleTimestamp,
+            getMinGambleAmount(),
+            acceptedToken.getFlowRate(address(this), lastGambler),
+            _getUnitsForFlowrate(1e6)
+        );
     }
 
     // stepwise hyperbolic decay which gets stretched further over time the longer the previous gamble took,
@@ -67,9 +75,17 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     }
 
     // have a pure version in order to make testing easier
-    function _getMinGambleAmount(uint256 blockTimestamp, uint256 lastGambleTimestamp, uint256 lastGambleAmount, uint256 prevGambleDuration) public pure returns(uint256) {
+    function _getMinGambleAmount(
+        uint256 blockTimestamp,
+        uint256 lastGambleTimestamp_,
+        uint256 lastGambleAmount_,
+        uint256 prevGambleDuration_
+    ) 
+        public pure
+        returns(uint256)
+    {
         uint256 initialHalvingPeriod = 4;
-        uint256 x = prevGambleDuration ;
+        uint256 x = prevGambleDuration_ ;
         // this could loop at most 256 times (nr of bits of x)
         while (x > 1) {
             x >>= 1;
@@ -81,7 +97,7 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
         uint256 nrHalvings = 0;
 
         // create a log scale for the halving speed
-        uint256 timePassed = blockTimestamp - lastGambleTimestamp;
+        uint256 timePassed = blockTimestamp - lastGambleTimestamp_;
         // this loop is in theory unbounded, but worst case 32 iterations cover >100 years, we're good with that
         while (timePassed >= halvingPeriod) {
             timePassed -= halvingPeriod;
@@ -89,7 +105,7 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
             nrHalvings++;
         }
 
-        return (lastGambleAmount * INITIAL_MIN_AMOUNT_MULTIPLIER) >> nrHalvings; // equivalent to initialAmount / 2^halvings        
+        return (lastGambleAmount_ * INITIAL_MIN_AMOUNT_MULTIPLIER) >> nrHalvings; // equivalent to initialAmount / 2^halvings        
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -138,6 +154,13 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
     // ---------------------------------------------------------------------------------------------
     // SUPERAPP CALLBACKS
 
+    // IDA units are proportional to the flowrate, with a linear time based discount applied.
+    // This creates an incentive to keep streams open
+    function _getUnitsForFlowrate(int96 flowrate) public view returns(uint128) {
+        // this translates to ~99% after 1 day, ~80% after 1 month, ~25% after 1 year ...
+        return uint128(uint256(int256(flowrate)) * 1e7 / (1e7 + (block.timestamp - gameStartTimestamp)));
+    }
+
     function onFlowCreated(
         ISuperToken /*superToken*/,
         address sender,
@@ -154,7 +177,10 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
         acceptedToken.transferFrom(sender, address(this), uint256(int256(flowrate * 600)));
         newCtx = acceptedToken.distributeWithCtx(INDEX_ID, acceptedToken.balanceOf(address(this)), ctx);
         // give the streamers their share of future gambler money
-        newCtx = acceptedToken.updateSubscriptionUnitsWithCtx(INDEX_ID, sender, uint128(int128(flowrate)), newCtx); 
+
+        uint128 idaUnits = _getUnitsForFlowrate(flowrate);
+        newCtx = acceptedToken.updateSubscriptionUnitsWithCtx(INDEX_ID, sender, idaUnits, newCtx); 
+        emit NewStream(sender, flowrate, idaUnits);
         return _updateOutflow(newCtx);
     }
 
@@ -185,7 +211,9 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
         override
         returns (bytes memory newCtx) 
     {
+        console.log("deleting subscription...");
         newCtx = acceptedToken.deleteSubscriptionWithCtx(address(this), INDEX_ID, sender, ctx);
+        console.log("_updateOutflow");
         return _updateOutflow(newCtx);
     }
 
@@ -198,6 +226,13 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
         int96 netFlowRate = acceptedToken.getNetFlowRate(address(this));
         int96 outFlowRate = acceptedToken.getFlowRate(address(this), lastGambler);
         int96 inFlowRate = netFlowRate + outFlowRate;
+
+        console.log("_UPDATEOUTFLOW");
+        console.log("  net  %s", uint256(int256(netFlowRate)));
+        console.logInt(int256(netFlowRate));
+        console.log("  out  %s", uint256(int256(outFlowRate)));
+        console.log("  in   %s", uint256(int256(inFlowRate)));
+
         if (inFlowRate == 0) {
             // The flow does exist and should be deleted.
             newCtx = acceptedToken.deleteFlowWithCtx(address(this), lastGambler, ctx);

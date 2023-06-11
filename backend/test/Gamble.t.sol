@@ -14,6 +14,7 @@ import { CFAv1Forwarder } from "@superfluid-finance/ethereum-contracts/contracts
 
 import "../contracts/Gamble.sol";
 
+// due to time pressure, a lot of testing is currently replaced by console logging for quick plausibility checking
 contract GambleTest is Test {
 
     using SuperTokenV1Library for ISuperToken;
@@ -59,7 +60,11 @@ contract GambleTest is Test {
     function stream(address who, int96 flowRate) public {
         vm.startPrank(who);
         superToken.approve(address(game), type(uint256).max);
-        superToken.createFlow(address(game), flowRate);
+        if (flowRate == 0) {
+            superToken.deleteFlow(who, address(game));
+        } else {
+            superToken.createFlow(address(game), flowRate);
+        }
         vm.stopPrank();
     }
 
@@ -75,7 +80,32 @@ contract GambleTest is Test {
         assertEq(game.lastGambler(), expectedGambler, "unexpected gambler");
         int96 gamblerNetFr = superToken.getNetFlowRate(game.lastGambler());
         assertEq(int256(gamblerNetFr), int256(expectedFr), "unexpected flowrate");
-        console.log("minGambleAmount (TODO: test): %s", game.getMinGambleAmount());
+        //console.log("minGambleAmount (TODO: test): %s", game.getMinGambleAmount());
+        printGameState();
+    }
+
+    function printGameState() public {
+        (
+            uint256 gameStartTimestamp,
+            address lastGambler,
+            uint256 lastGambleTimestamp,
+            uint256 currentMinGambleAmount,
+            int96 currentFlowrate,
+            uint128 currentUnitsPer1MNewFlowrate
+        ) = game.getGameState();
+
+        console.log("STATE:");
+        console.log("  start %s, gambler %s", gameStartTimestamp, lastGambler);
+        console.log("  gambleTs %s, minAmount %s", lastGambleTimestamp, currentMinGambleAmount);
+        console.log("  fr %s, unitsPerM %s", uint256(int256(currentFlowrate)), uint256(currentUnitsPer1MNewFlowrate));
+        console.log("");
+        console.log("BALANCES");
+        console.log("   game     %s", superToken.balanceOf(address(game)));
+        console.log("   deployer %s", superToken.balanceOf(deployer));
+        console.log("   alice    %s", superToken.balanceOf(alice));
+        console.log("   bob      %s", superToken.balanceOf(bob));
+        console.log("   carol    %s", superToken.balanceOf(carol));
+        console.log("   dan      %s", superToken.balanceOf(dan));
     }
 
     // TESTS
@@ -157,6 +187,21 @@ contract GambleTest is Test {
 
         gamble(carol, 15e14);
         assertInvariants(carol, 3e9);
+
+/*
+        console.log("alice closes stream");
+        stream(alice, 0);
+
+        skip(600); // fast forward 10 mins
+        assertInvariants(carol, 2e9);
+*/        
+
+        console.log("bob closes stream");
+        stream(bob, 0);
+
+        skip(600); // fast forward 10 mins
+        assertInvariants(carol, 1e9);
+        printGameState();
     }
 
     // _getMinGambleAmount(uint256 blockTimestamp, uint256 lastGambleTimestamp, uint256 lastGambleAmount, uint256 prevGambleDuration) public pure returns(uint256) {
