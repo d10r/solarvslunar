@@ -9,6 +9,7 @@ import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IE
 import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import { SuperAppBaseCFA } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBaseCFA.sol";
 
+// THIS CONTRACT IS NOT WELL TESTED, USE AT YOUR OWN RISK!
 contract Gamble is IERC777Recipient, SuperAppBaseCFA {
 
     using SuperTokenV1Library for ISuperToken;
@@ -175,7 +176,6 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
         acceptedToken.transferFrom(sender, address(this), uint256(int256(flowrate * 600)));
         newCtx = acceptedToken.distributeWithCtx(INDEX_ID, acceptedToken.balanceOf(address(this)), ctx);
         // give the streamers their share of future gambler money
-
         uint128 idaUnits = _getUnitsForFlowrate(flowrate);
         newCtx = acceptedToken.updateSubscriptionUnitsWithCtx(INDEX_ID, sender, idaUnits, newCtx); 
         emit NewStream(sender, flowrate, idaUnits);

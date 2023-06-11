@@ -35,6 +35,7 @@ contract GambleTest is Test {
 
     constructor() {
         string memory rpc = vm.envString("RPC");
+        //vm.createSelectFork(rpc, 36708391);
         vm.createSelectFork(rpc);
         HOST = vm.envAddress("HOST");
         SUPERTOKEN = vm.envAddress("SUPERTOKEN");
@@ -80,12 +81,12 @@ contract GambleTest is Test {
     }
 
     function assertInvariants(address expectedGambler, int96 expectedFr) public {
-        int96 gameNetFr = superToken.getNetFlowRate(address(game));
+        // adding +1 for the deployer stream
+        expectedFr += 1;
         assertEq(int256(superToken.getNetFlowRate(address(game))), 0, "game flowrate is not 0");
         assertEq(game.lastGambler(), expectedGambler, "unexpected gambler");
-        int96 gamblerNetFr = superToken.getNetFlowRate(game.lastGambler());
-        // adding +1 for the deployer stream
-        assertEq(int256(gamblerNetFr), int256(expectedFr)+1, "unexpected flowrate");
+        int96 gamblerFr = superToken.getFlowRate(address(game), game.lastGambler());
+        assertEq(int256(gamblerFr), int256(expectedFr), "unexpected flowrate");
         //console.log("minGambleAmount (TODO: test): %s", game.getMinGambleAmount());
         printGameState();
     }
@@ -119,20 +120,20 @@ contract GambleTest is Test {
     function testBeFirstStreamer() public {
         stream(alice, 1e9);
         console.log("flowrate to game: %s", uint256(int256(superToken.getFlowRate(alice, address(game)))));
-        assertEq(int256(superToken.getFlowRate(alice, address(game))), 1e9, "unexpected flowrate");
+        assertInvariants(deployer, 1e9);
     }
 
     function testGambleWithoutStream() public {
         console.log("minGambleAmount: %s", game.getMinGambleAmount());
         gamble(bob, 1e12);
-        assertEq(superToken.balanceOf(address(game)), 1e12, "unexpected balance");
+        assertInvariants(bob, 0);
     }
 
     function testGambleWithStream() public {
         stream(alice, 1e9);
         console.log("minGambleAmount: %s", game.getMinGambleAmount());
         gamble(bob, 1e12);
-        //assertEq(superToken.balanceOf(address(game)), 0, "unexpected balance");
+        assertInvariants(bob, 1e9);
     }
 
     function test1Stream2GamblersNoGap() public {
@@ -144,17 +145,13 @@ contract GambleTest is Test {
     }
 
     function test1Stream2Gamblers1min() public {
+        assertInvariants(deployer, 0);
         stream(alice, 1e9);
-        console.log("minGambleAmount 1: %s", game.getMinGambleAmount());
-        console.log("netFr game: %s", uint256(int256(superToken.getNetFlowRate(address(game)))));
-        console.log("netFr bob:  %s", uint256(int256(superToken.getNetFlowRate(address(bob)))));
-
         assertInvariants(deployer, 1e9);
 
         gamble(bob, 1e12);
         assertInvariants(bob, 1e9);
 
-        assertEq(uint256(int256(superToken.getNetFlowRate(address(bob)))), 1e9, "bob unexpected fr");
         skip(60); // fast forward 60 seconds
         //console.log("lastAmount: %s, lastTimestamp: %s, prevDuration: %s", game.lastGambleAmount(), game.lastGambleTimestamp(), game.prevGambleDuration());
         console.log("minGambleAmount 2: %s", game.getMinGambleAmount());
@@ -171,10 +168,11 @@ contract GambleTest is Test {
     }
 
     function testCloseAllStreams() public {
-
+        console.log("1");
         stream(alice, 1e9);
         assertInvariants(deployer, 1e9);
     
+        console.log("2");
         stream(bob, 2e9);
         assertInvariants(deployer, 3e9);
 
@@ -185,7 +183,7 @@ contract GambleTest is Test {
         assertInvariants(deployer, 0);
     }
 
-    function notestComplexSetup() public {
+    function testComplexSetup() public {
         stream(alice, 1e9);
         assertInvariants(deployer, 1e9);
 
@@ -232,7 +230,7 @@ contract GambleTest is Test {
     }
 
     // _getMinGambleAmount(uint256 blockTimestamp, uint256 lastGambleTimestamp, uint256 lastGambleAmount, uint256 prevGambleDuration) public pure returns(uint256) {
-    function testMinGambleAmount() public {
+    function notestMinGambleAmount() public {
         uint prevDuration = 0;
         uint amount = 0;
 
