@@ -9,8 +9,6 @@ import { IERC1820Registry } from "@openzeppelin/contracts/utils/introspection/IE
 import { IERC777Recipient } from "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import { SuperAppBaseCFA } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBaseCFA.sol";
 
-import "forge-std/Test.sol";
-
 contract Gamble is IERC777Recipient, SuperAppBaseCFA {
 
     using SuperTokenV1Library for ISuperToken;
@@ -211,9 +209,7 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
         override
         returns (bytes memory newCtx) 
     {
-        console.log("deleting subscription...");
         newCtx = acceptedToken.deleteSubscriptionWithCtx(address(this), INDEX_ID, sender, ctx);
-        console.log("_updateOutflow");
         return _updateOutflow(newCtx);
     }
 
@@ -226,12 +222,6 @@ contract Gamble is IERC777Recipient, SuperAppBaseCFA {
         int96 netFlowRate = acceptedToken.getNetFlowRate(address(this));
         int96 outFlowRate = acceptedToken.getFlowRate(address(this), lastGambler);
         int96 inFlowRate = netFlowRate + outFlowRate;
-
-        console.log("_UPDATEOUTFLOW");
-        console.log("  net  %s", uint256(int256(netFlowRate)));
-        console.logInt(int256(netFlowRate));
-        console.log("  out  %s", uint256(int256(outFlowRate)));
-        console.log("  in   %s", uint256(int256(inFlowRate)));
 
         if (inFlowRate == 0) {
             // The flow does exist and should be deleted.
